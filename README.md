@@ -1,9 +1,9 @@
 # Anuvada: Interpretable Models for NLP using PyTorch
 
 One of the common criticisms of deep learning has been it's black box nature. To address this issue, researchers have
-developed many ways to visualise and explain the inference. Some examples would be attention in the case of RNN's,
-activation maps, guided back propagation and occlusion (in the case of CNN's). This library is an ongoing effort to
-provide a high-level access to such models relying on PyTorch.
+developed many ways to visualise and explain the inference. Making models interpretable would help the practitioners
+better understand and use if effectively. This library is an ongoing effort to provide a high-level access to
+such models by building on top of PyTorch.
 
 ## Installing
 
@@ -11,6 +11,8 @@ Clone this repo and add it to your python library path.
 
 * [PyTorch](http://pytorch.org)
 * [NumPy](http://numpy.org/)
+* [Pandas](http://pandas.pydata.org/)
+* [Spacy](https://spacy.io/)
 
 ### Getting started
 
