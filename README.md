@@ -1,9 +1,11 @@
 # Anuvada: Interpretable Models for NLP using PyTorch
 
 One of the common criticisms of deep learning has been it's black box nature. To address this issue, researchers have
-developed many ways to visualise and explain the inference. Making models interpretable would help the practitioners
-better understand and use if effectively. This library is an ongoing effort to provide a high-level access to
-such models by building on top of PyTorch.
+developed many ways to visualise and explain the inference. Self-explainable models are necessary to push deep learning
+models into various domains. This library is an ongoing effort to provide a high-level access to
+such models by building on top of PyTorch. Here is what you can expect to visualize from a trained model.
+
+[alt text](screenshot-10.0.0.14-8890-2017-08-31-18-25-19.png "Attention Classification")
 
 ## Installing
 
