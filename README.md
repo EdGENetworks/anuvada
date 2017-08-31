@@ -5,7 +5,7 @@ developed many ways to visualise and explain the inference. Self-explainable mod
 models into various domains. This library is an ongoing effort to provide a high-level access to
 such models by building on top of PyTorch. Here is what you can expect to visualize from a trained model.
 
-[alt text](screenshot.png "Attention Classification")
+![alt text](screenshot.png "Attention Classification")
 
 ## Installing
 
