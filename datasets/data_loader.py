@@ -1,14 +1,14 @@
 """
 A generic module for dataset creation
 """
-from spacy.en import English
+import spacy
 from collections import Counter
 import numpy as np
 import os
 import cPickle
 import pandas as pd
 
-nlp = English()
+nlp = spacy.load('en')
 
 class CreateDataset():
 
