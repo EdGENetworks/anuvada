@@ -7,52 +7,64 @@ import numpy as np
 import os
 import cPickle
 import pandas as pd
+from tqdm import tqdm
 
 nlp = spacy.load('en')
 
 class CreateDataset():
 
     def generate_tokens(self, description):
-        doc = nlp(unicode(description, 'utf-8'))
+        doc = nlp(unicode(description))
         return [x.lower_ for x in doc]
 
     def prepare_vocabulary(self, data):
         unique_id = Counter()
-        for doc in data:
+        data_tokens = []
+        for doc in tqdm(data):
             sample_tokens = self.generate_tokens(doc)
+            data_tokens.append(sample_tokens)
             for token in sample_tokens:
                 unique_id.update({token: 1})
-        return unique_id
+        return unique_id, data_tokens
 
     def create_threshold(self, counter_dict):
-        return Counter(el for el in counter_dict.elements() if counter_dict[el] > 5)
+        return Counter(el for el in counter_dict.elements() if counter_dict[el] >5)
 
     def create_token2id_dict(self, token_list):
         return {v: k for k, v in enumerate(token_list)}
 
-    def create_dataset(self, x, y, folder_path, max_doc_tokens):
-        data_tokens = []
+    def create_dataset(self, x, y, folder_path, max_doc_tokens, multilabel=False):
         len_x = len(x)
-        vocab_full = self.prepare_vocabulary(x)
+        print 'Building vocabulary...'
+        vocab_full, data_tokens = self.prepare_vocabulary(x)
+        print 'Creating threshold...'
         vocab_threshold = self.create_threshold(vocab_full)
         token2id = self.create_token2id_dict(list(vocab_threshold))
         token2id['_UNK'] = len(token2id)
-        token2id['_PAD'] = len(token2id) + 1
+        token2id['_PAD'] = len(token2id) 
         id2token = {k: v for k, v in enumerate(token2id)}
-        label2id = {v: k for k, v in enumerate(list(set(y)))}
-        id2label = {k: v for k, v in enumerate(label2id)}
-        labels = [label2id[item] for item in y]
-        for doc in x:
-            sample_tokens = self.generate_tokens(doc)
-            data_tokens.append([token2id.get(y, token2id['_UNK']) for y in sample_tokens])
-        df = pd.DataFrame({'data_tokens': data_tokens,
-                           'labels': labels})
+        if multilabel is False:
+            label2id = {v: k for k, v in enumerate(list(set(y)))}
+            id2label = {k: v for k, v in enumerate(label2id)}
+            labels = [label2id[item] for item in y]
+        else:
+            labels_list = [xx.split(',') for xx in y]
+            flat_labels = [item for sublist in labels_list for item in sublist]
+            flat_labels = list(pd.Series(flat_labels).unique())
+            label2id = {v: k for k, v in enumerate(flat_labels)}
+            id2label = {k: v for k, v in enumerate(label2id)}
+            labels = [[label2id[y] for y in xx] for xx in labels_list]    
+        print 'Building dataset...'
+        thresholded_tokens = []
+        for document in data_tokens:
+            thresholded_tokens.append([token2id.get(zz, token2id.get('_UNK')) for zz in document])
+        df = pd.DataFrame({'data_tokens': thresholded_tokens})
         df['doc_len'] = df['data_tokens'].apply(lambda x: len(x))
         df = df.sort_values('doc_len', ascending=False)
         # Padding with dummy _UNK token
         lengths_array = df.doc_len.values
         # max_len = max(lengths_array)
-        pad_token = len(token2id) + 1
+        pad_token = token2id['_PAD']
         data_padded = np.zeros((len_x, max_doc_tokens), dtype=np.int)
         for i in xrange(data_padded.shape[0]):
             for j in xrange(data_padded.shape[1]):
@@ -68,8 +80,8 @@ class CreateDataset():
         np.save(os.path.join(folder_path, 'lengths_mask'), df.doc_len.values)
         cPickle.dump(token2id, open(os.path.join(folder_path, 'token2id.pkl'), 'w'))
         cPickle.dump(label2id, open(os.path.join(folder_path, 'label2id.pkl'), 'w'))
-        np.save(os.path.join(folder_path, 'labels_encoded'), df['labels'].values)
-        return data_tokens, labels
+        np.save(os.path.join(folder_path, 'labels_encoded'), labels)
+        return data_padded, labels
 
 class LoadData():
 
@@ -87,4 +99,5 @@ class LoadData():
         except:
             print 'No dataset exists in the specified path.'
             return None
+
 
