@@ -51,13 +51,14 @@ class CreateDataset():
             id2label = {k: v for k, v in enumerate(label2id)}
             labels = [label2id[item] for item in y]
         else:
-            labels_list = [xx.split(',') for xx in y]
+            labels_list = [xx.split('__') for xx in y]
             flat_labels = [item for sublist in labels_list for item in sublist]
             flat_labels = list(pd.Series(flat_labels).unique())
             label2id = {v: k for k, v in enumerate(flat_labels)}
             id2label = {k: v for k, v in enumerate(label2id)}
             labels = [[label2id[y] for y in xx] for xx in labels_list]
             labels = [to_multilabel(y, len(label2id)) for y in labels]
+            labels = np.array(labels)
         print 'Building dataset...'
         thresholded_tokens = []
         for document in data_tokens:
