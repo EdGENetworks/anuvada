@@ -37,7 +37,8 @@ class FitModule(Module):
             loss=DEFAULT_LOSS,
             optimizer=DEFAULT_OPTIMIZER,
             run_on='cpu',
-            metrics=None):
+            metrics=None,
+            multilabel=False):
         """Trains the model similar to Keras' .fit(...) method
 
         # Arguments
@@ -119,7 +120,10 @@ class FitModule(Module):
                 batch_idxs = train_idxs[batch_start:batch_end]
                 batch_idxs = torch.from_numpy(batch_idxs).long()
                 x_batch = Variable(x[batch_idxs]).type(self.embedding_tensor)
-                y_batch = Variable(y[batch_idxs]).type(self.embedding_tensor)
+                if multilabel:
+                    y_batch = Variable(y[batch_idxs]).type(self.dtype)
+                else:
+                    y_batch = Variable(y[batch_idxs]).type(self.embedding_tensor)
                 mask = masks_for_rnn[batch_start: batch_end]
                 self.batch_size = batch_size
                 init_hidden = self.init_hidden()
@@ -139,7 +143,11 @@ class FitModule(Module):
                 add_metrics_to_log(log, metrics, y, y_train_pred)
             if val_x is not None and val_y is not None and masks_for_rnn_val is not None:
                 y_val_pred = self.predict(val_x, masks_for_rnn_val)
-                val_loss = loss(Variable(y_val_pred).type(self.dtype), Variable(val_y).type(self.embedding_tensor))
+                if multilabel:
+                    val_loss = loss(Variable(y_val_pred).type(self.dtype), Variable(val_y).type(self.dtype))
+                else:
+                    val_loss = loss(Variable(y_val_pred).type(self.dtype), Variable(val_y).type(self.embedding_tensor))
+
                 log['val_loss'] = val_loss.data[0]
                 if metrics:
                     add_metrics_to_log(log, metrics, val_y, y_val_pred, 'val_')
@@ -183,3 +191,4 @@ class FitModule(Module):
             batch_idxs = batch_idxs.type(self.embedding_tensor)
             y_pred[batch_idxs] = y_batch_pred
         return y_pred
+

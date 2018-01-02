@@ -73,3 +73,10 @@ def load_model(model_object, filepath):
     model_object.load_state_dict(weights)
     print 'Model loaded.'
     return None
+
+def to_multilabel(list_of_ids, n_classes):
+    label_vector = np.zeros(n_classes,dtype=np.int)
+    for idx in list_of_ids:
+        label_vector[idx] = 1
+    return label_vector
+

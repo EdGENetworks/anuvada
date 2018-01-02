@@ -8,8 +8,11 @@ import os
 import cPickle
 import pandas as pd
 from tqdm import tqdm
+from ..utils import to_multilabel
 
 nlp = spacy.load('en')
+
+
 
 class CreateDataset():
 
@@ -53,7 +56,8 @@ class CreateDataset():
             flat_labels = list(pd.Series(flat_labels).unique())
             label2id = {v: k for k, v in enumerate(flat_labels)}
             id2label = {k: v for k, v in enumerate(label2id)}
-            labels = [[label2id[y] for y in xx] for xx in labels_list]    
+            labels = [[label2id[y] for y in xx] for xx in labels_list]
+            labels = [to_multilabel(y, len(label2id)) for y in labels]
         print 'Building dataset...'
         thresholded_tokens = []
         for document in data_tokens:
@@ -81,7 +85,7 @@ class CreateDataset():
         cPickle.dump(token2id, open(os.path.join(folder_path, 'token2id.pkl'), 'w'))
         cPickle.dump(label2id, open(os.path.join(folder_path, 'label2id.pkl'), 'w'))
         np.save(os.path.join(folder_path, 'labels_encoded'), labels)
-        return data_padded, labels
+        return data_padded, labels, token2id, label2id, list(df.doc_len.values)
 
 class LoadData():
 
