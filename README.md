@@ -1,9 +1,10 @@
 # Anuvada: Interpretable Models for NLP using PyTorch
 
-One of the common criticisms of deep learning has been it's black box nature. To address this issue, researchers have
-developed many ways to visualise and explain the inference. Self-explainable models are necessary to push deep learning
-models into various domains. This library is an ongoing effort to provide a high-level access to
-such models by building on top of PyTorch. Here is what you can expect to visualize from a trained model.
+So, you want to know why your classifier arrived at a particular decision or why your flashy new deep learning classification model is not performing in the way which you would want it to perform? Or there could be bias in your dataset towards a particular class and you want to understand if there are any such edge cases.
+
+One of the common criticisms of deep learning has been it's black box nature. To address this issue, researchers have developed many ways to visualise and explain the inference. It is not necessary that a model has to be explainable, but when important decisions like which jobs to recommend to a person or whether to give a person loan are being made, it would be helpful to cross-check the model's claims. In such domains, self-explainable models are necessary.
+
+This library is an ongoing effort to provide a high-level access to such models by building on top of PyTorch. Here is what you can expect to visualize from a trained model. This package would help you to get started very quickly by closely following sklearn API style. Contributions are welcomed!
 
 ![alt text](screenshot.png "Attention Classification")
 
@@ -15,6 +16,7 @@ Clone this repo and add it to your python library path.
 * [NumPy](http://numpy.org/)
 * [Pandas](http://pandas.pydata.org/)
 * [Spacy](https://spacy.io/)
+* tqdm
 
 ### Getting started
 
@@ -124,11 +126,15 @@ loss = acf.fit(x,y, lengths_mask ,epochs=5, validation_split=0.2)
 - [x] Implement support for masking gradients in RNN (Working now!)
 - [x] Implement a generic data set loader
 - [ ] Implement CNN Classifier with feature map visualisation
+- [ ] Sensitivity analysis for generic model
 - [x] Implement support for validation split
 - [ ] Separate modules for CNN and RNN
 - [x] Implement GPU Support
 - [x] Implement support for custom loss function, learning rate tuning, custom metrics
 - [x] Support for loading and saving models
+- [ ]  Write documentation
+- [ ]  Clean Code
+- [ ]  Implement basic validation measures like accuracy
 
 ## Acknowledgments
 
