@@ -9,6 +9,7 @@ import cPickle
 import pandas as pd
 from tqdm import tqdm
 from ..utils import to_multilabel
+from gensim.models import Word2Vec
 
 nlp = spacy.load('en')
 
@@ -30,22 +31,58 @@ class CreateDataset():
                 unique_id.update({token: 1})
         return unique_id, data_tokens
 
+    def prepare_vocabulary_word2vec(self, data, folder_path):
+        list_of_docs = []
+        for doc in tqdm(data):
+            doc = nlp(unicode(doc))
+            list_of_sents = []
+            for sentence in doc.sents:
+                list_of_words = []
+                for word in sentence:
+                    list_of_words.append(word.orth_.lower())
+                list_of_sents.append(list_of_words)
+            list_of_docs.append(list_of_sents)
+        flat_list = [item for sublist in list_of_docs for item in sublist]
+        print 'Bulding Word2vec model...'
+        model = Word2Vec(flat_list, size=300, window=5, min_count=1, workers=4)
+        fname = 'word2vec_300_5_5'
+        folder_fname = os.path.join(folder_path, fname)
+        model.save(folder_fname)
+        print 'Word2vec model saved...'
+        unique_vocab = model.wv.index2word
+        token2id = {v:k for k,v in enumerate(unique_vocab)}
+        doc_tokens = []
+        for doc in list_of_docs:
+            temp = []
+            for sent in doc:
+                for word in sent:
+                    temp.append(word)
+            doc_tokens.append(temp)
+        return token2id, doc_tokens
+
     def create_threshold(self, counter_dict):
-        return Counter(el for el in counter_dict.elements() if counter_dict[el] >5)
+        return Counter(el for el in counter_dict.elements() if counter_dict[el] >= 5)
 
     def create_token2id_dict(self, token_list):
         return {v: k for k, v in enumerate(token_list)}
 
-    def create_dataset(self, x, y, folder_path, max_doc_tokens, multilabel=False):
+    def create_dataset(self, x, y, folder_path, max_doc_tokens, multilabel=False, word2vec=False):
         len_x = len(x)
-        print 'Building vocabulary...'
-        vocab_full, data_tokens = self.prepare_vocabulary(x)
-        print 'Creating threshold...'
-        vocab_threshold = self.create_threshold(vocab_full)
-        token2id = self.create_token2id_dict(list(vocab_threshold))
-        token2id['_UNK'] = len(token2id)
-        token2id['_PAD'] = len(token2id) 
-        id2token = {k: v for k, v in enumerate(token2id)}
+        if not word2vec:
+            print 'Building vocabulary...'
+            vocab_full, data_tokens = self.prepare_vocabulary(x)
+            print 'Creating threshold...'
+            vocab_threshold = self.create_threshold(vocab_full)
+            token2id = self.create_token2id_dict(list(vocab_threshold))
+            token2id['_UNK'] = len(token2id)
+            token2id['_PAD'] = len(token2id)
+            id2token = {k: v for k, v in enumerate(token2id)}
+        else:
+            print 'Building vocabulary...'
+            token2id , data_tokens = self.prepare_vocabulary_word2vec(x, folder_path)
+            token2id['_UNK'] = len(token2id)
+            token2id['_PAD'] = len(token2id)
+            id2token = {k: v for k, v in enumerate(token2id)}
         if multilabel is False:
             label2id = {v: k for k, v in enumerate(list(set(y)))}
             id2label = {k: v for k, v in enumerate(label2id)}
@@ -86,6 +123,7 @@ class CreateDataset():
         cPickle.dump(token2id, open(os.path.join(folder_path, 'token2id.pkl'), 'w'))
         cPickle.dump(label2id, open(os.path.join(folder_path, 'label2id.pkl'), 'w'))
         np.save(os.path.join(folder_path, 'labels_encoded'), labels)
+        print 'Datasets saved in folder %s' % (folder_path)
         return data_padded, labels, token2id, label2id, list(df.doc_len.values)
 
 class LoadData():
@@ -104,5 +142,4 @@ class LoadData():
         except:
             print 'No dataset exists in the specified path.'
             return None
-
 
