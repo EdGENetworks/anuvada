@@ -8,13 +8,14 @@ from torch.autograd import Variable
 from torch.nn.utils.rnn import pack_padded_sequence
 from torch.nn.utils.rnn import pad_packed_sequence
 import codecs
+from gensim.models import Word2Vec
 
 from fit_module import FitModule
 
 
 class AttentionClassifier(FitModule):
 
-    def __init__(self, vocab_size, embed_size, gru_hidden, n_classes, bidirectional=True):
+    def __init__(self, vocab_size, embed_size, gru_hidden, n_classes, bidirectional=True, word2vec_path = None):
 
         super(AttentionClassifier, self).__init__()
         self.num_tokens = vocab_size
@@ -24,6 +25,13 @@ class AttentionClassifier(FitModule):
         self.n_classes = n_classes
         # self.batch_size = batch_size
         self.lookup = nn.Embedding(vocab_size, embed_size)
+        if word2vec_path:
+            model = Word2Vec.load(word2vec_path)
+            wv_matrix = model.wv.syn0
+            try:
+                self.lookup.weight.data.copy_(torch.from_numpy(wv_matrix))
+            except:
+                print 'Please check your Word2Vec model...'
         self.gru = nn.GRU(embed_size, gru_hidden, bidirectional=True)
         self.weight_attention = nn.Parameter(torch.Tensor(2 * gru_hidden, 2 * gru_hidden))
         self.bias_attention = nn.Parameter(torch.Tensor(2 * gru_hidden, 1))
