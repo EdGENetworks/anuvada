@@ -19,7 +19,7 @@ DEFAULT_LOSS = CrossEntropyLoss()
 DEFAULT_OPTIMIZER = partial(SGD, lr=0.01, momentum=0.9)
 # DEFAULT_DTYPE = torch.FloatTensor
 
-class FitModule(Module):
+class FitModuleRNN(Module):
 
 
     def fit(self,

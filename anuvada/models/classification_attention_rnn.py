@@ -11,7 +11,7 @@ import codecs
 from gensim.models import Word2Vec
 import numpy as np
 
-from fit_module import FitModule
+from fit_module_rnn import FitModuleRNN
 
 
 class AttentionClassifier(FitModule):
