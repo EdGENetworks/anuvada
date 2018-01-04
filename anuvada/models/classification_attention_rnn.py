@@ -9,6 +9,7 @@ from torch.nn.utils.rnn import pack_padded_sequence
 from torch.nn.utils.rnn import pad_packed_sequence
 import codecs
 from gensim.models import Word2Vec
+import numpy as np
 
 from fit_module import FitModule
 
@@ -28,6 +29,9 @@ class AttentionClassifier(FitModule):
         if word2vec_path:
             model = Word2Vec.load(word2vec_path)
             wv_matrix = model.wv.syn0
+            # adding additional vectors for _UNK and _PAD
+            wv_matrix = np.insert(wv_matrix,wv_matrix.shape[1],0,axis=0)
+            wv_matrix = np.insert(wv_matrix,wv_matrix.shape[1],0,axis=0)
             try:
                 self.lookup.weight.data.copy_(torch.from_numpy(wv_matrix))
             except:
@@ -38,9 +42,12 @@ class AttentionClassifier(FitModule):
         self.weight_projection = nn.Parameter(torch.Tensor(2 * gru_hidden, 1))
         self.attention_softmax = nn.Softmax()
         self.final_softmax = nn.Linear(2 * gru_hidden, n_classes)
-        self.weight_attention.data.uniform_(-0.1, 0.1)
-        self.weight_projection.data.uniform_(-0.1, 0.1)
-        self.bias_attention.data.uniform_(-0.1, 0.1)
+        torch.nn.init.xavier_uniform(self.weight_attention.data)
+        torch.nn.init.xavier_uniform(self.weight_projection.data)
+        torch.nn.init.constant(self.bias_attention.data, 0.1)
+#        self.weight_attention.data.uniform_(-0.1, 0.1)
+#       self.weight_projection.data.uniform_(-0.1, 0.1)
+#        self.bias_attention.data.uniform_(-0.1, 0.1)
 
     def batch_matmul_bias(self, seq, weight, bias, nonlinearity=''):
         s = None
