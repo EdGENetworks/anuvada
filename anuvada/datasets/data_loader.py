@@ -44,8 +44,10 @@ class CreateDataset():
             list_of_docs.append(list_of_sents)
         flat_list = [item for sublist in list_of_docs for item in sublist]
         print 'Bulding Word2vec model...'
-        model = Word2Vec(flat_list, size=300, window=5, min_count=1, workers=4)
+        model = Word2Vec(flat_list, size=300, window=5, min_count=5, workers=4)
         fname = 'word2vec_300_5_5'
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
         folder_fname = os.path.join(folder_path, fname)
         model.save(folder_fname)
         print 'Word2vec model saved...'
