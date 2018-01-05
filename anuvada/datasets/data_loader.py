@@ -102,7 +102,7 @@ class CreateDataset():
         thresholded_tokens = []
         for document in data_tokens:
             thresholded_tokens.append([token2id.get(zz, token2id.get('_UNK')) for zz in document])
-        df = pd.DataFrame({'data_tokens': thresholded_tokens})
+        df = pd.DataFrame({'data_tokens': thresholded_tokens, 'labels': labels})
         df['doc_len'] = df['data_tokens'].apply(lambda x: len(x))
         df = df.sort_values('doc_len', ascending=False)
         # Padding with dummy _UNK token
@@ -124,7 +124,7 @@ class CreateDataset():
         np.save(os.path.join(folder_path, 'lengths_mask'), df.doc_len.values)
         cPickle.dump(token2id, open(os.path.join(folder_path, 'token2id.pkl'), 'w'))
         cPickle.dump(label2id, open(os.path.join(folder_path, 'label2id.pkl'), 'w'))
-        np.save(os.path.join(folder_path, 'labels_encoded'), labels)
+        np.save(os.path.join(folder_path, 'labels_encoded'), df['labels'].values)
         print 'Datasets saved in folder %s' % (folder_path)
         return data_padded, labels, token2id, label2id, list(df.doc_len.values)
 
