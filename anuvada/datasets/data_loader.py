@@ -96,8 +96,6 @@ class CreateDataset():
             label2id = {v: k for k, v in enumerate(flat_labels)}
             id2label = {k: v for k, v in enumerate(label2id)}
             labels = [[label2id[y] for y in xx] for xx in labels_list]
-            labels = [to_multilabel(y, len(label2id)) for y in labels]
-            labels = np.array(labels)
         print 'Building dataset...'
         thresholded_tokens = []
         for document in data_tokens:
@@ -124,7 +122,13 @@ class CreateDataset():
         np.save(os.path.join(folder_path, 'lengths_mask'), df.doc_len.values)
         cPickle.dump(token2id, open(os.path.join(folder_path, 'token2id.pkl'), 'w'))
         cPickle.dump(label2id, open(os.path.join(folder_path, 'label2id.pkl'), 'w'))
-        np.save(os.path.join(folder_path, 'labels_encoded'), df['labels'].values)
+        if multilabel:
+            labels = df['labels'].values
+            labels = [to_multilabel(y, len(label2id)) for y in labels]
+            labels = np.array(labels)
+            np.save(os.path.join(folder_path, 'labels_encoded'), labels)
+        else:
+            np.save(os.path.join(folder_path, 'labels_encoded'), df['labels'].values)
         print 'Datasets saved in folder %s' % (folder_path)
         return data_padded, labels, token2id, label2id, list(df.doc_len.values)
 
