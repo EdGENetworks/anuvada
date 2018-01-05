@@ -88,13 +88,21 @@ class CreateDataset():
         if multilabel is False:
             label2id = {v: k for k, v in enumerate(list(set(y)))}
             id2label = {k: v for k, v in enumerate(label2id)}
+            label2count = pd.DataFrame(pd.Series(y).value_counts()).to_dict('dict')[0]
+            labelid2count = {}
+            for k, v in label2count.iteritems():
+                labelid2count[label2id.get(k)] = v
             labels = [label2id[item] for item in y]
         else:
             labels_list = [xx.split('__') for xx in y]
             flat_labels = [item for sublist in labels_list for item in sublist]
+            label2count = pd.DataFrame(pd.Series(flat_labels).value_counts()).to_dict('dict')[0]
             flat_labels = list(pd.Series(flat_labels).unique())
             label2id = {v: k for k, v in enumerate(flat_labels)}
             id2label = {k: v for k, v in enumerate(label2id)}
+            labelid2count = {}
+            for k, v in label2count.iteritems():
+                labelid2count[label2id.get(k)] = v
             labels = [[label2id[y] for y in xx] for xx in labels_list]
         print 'Building dataset...'
         thresholded_tokens = []
@@ -127,8 +135,11 @@ class CreateDataset():
             labels = [to_multilabel(y, len(label2id)) for y in labels]
             labels = np.array(labels)
             np.save(os.path.join(folder_path, 'labels_encoded'), labels)
+            cPickle.dump(labelid2count, open(os.path.join(folder_path, 'labelid2count.pkl'), 'w'))
+
         else:
             np.save(os.path.join(folder_path, 'labels_encoded'), df['labels'].values)
+            cPickle.dump(labelid2count, open(os.path.join(folder_path, 'labelid2count.pkl'), 'w'))
         print 'Datasets saved in folder %s' % (folder_path)
         return data_padded, labels, token2id, label2id, list(df.doc_len.values)
 
@@ -144,7 +155,8 @@ class LoadData():
             token2id = cPickle.load(open(os.path.join(folder_path, 'token2id.pkl'), 'r'))
             label2id = cPickle.load(open(os.path.join(folder_path, 'label2id.pkl'), 'r'))
             length_masks = np.load(os.path.join(folder_path, 'lengths_mask.npy'))
-            return samples_encoded, labels_encoded, token2id, label2id, length_masks
+            labelid2count = cPickle.load(open(os.path.join(folder_path, 'labelid2count.pkl'), 'r'))
+            return samples_encoded, labels_encoded, token2id, label2id, length_masks, labelid2count
         except:
             print 'No dataset exists in the specified path.'
             return None
