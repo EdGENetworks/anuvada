@@ -14,7 +14,7 @@ import numpy as np
 from fit_module_rnn import FitModuleRNN
 
 
-class AttentionClassifier(FitModule):
+class AttentionClassifier(FitModuleRNN):
 
     def __init__(self, vocab_size, embed_size, gru_hidden, n_classes, bidirectional=True, word2vec_path = None):
 
