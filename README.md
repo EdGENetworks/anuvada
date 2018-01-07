@@ -126,7 +126,7 @@ loss = acf.fit(x,y, lengths_mask ,epochs=5, validation_split=0.2)
 - [x] Implement support for masking gradients in RNN (Working now!)
 - [x] Implement a generic data set loader
 - [x] Implement CNN Classifier * (pending) with feature map visualisation
-- [ ] Sensitivity analysis for generic model
+- [x] Sensitivity analysis for generic model (CNN done, pending RNN)
 - [x] Implement support for validation split
 - [x] Separate modules for CNN and RNN
 - [x] Implement GPU Support

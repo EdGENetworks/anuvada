@@ -6,6 +6,9 @@ import torch.nn.functional as F
 from fit_module_cnn import FitModuleCNN
 from gensim.models import Word2Vec
 import numpy as np
+from torch.autograd import Variable
+import pandas as pd
+import codecs
 
 
 class ClassificationCNN(FitModuleCNN):
@@ -30,6 +33,7 @@ class ClassificationCNN(FitModuleCNN):
             wv_matrix = np.insert(wv_matrix,wv_matrix.shape[1],0,axis=0)
             wv_matrix = np.insert(wv_matrix,wv_matrix.shape[1],0,axis=0)
             self.embed.weight.data.copy_(torch.from_numpy(wv_matrix))
+        self.embed.weight.requires_grad = True
         # creating convolutional layers
         self.convs1 = nn.ModuleList([nn.Conv2d(self.channel_size, kernel_num, (K, embed_dim)) for K in kernel_sizes])
         self.final_linear = nn.Linear(len(kernel_sizes)*kernel_num, num_classes)
@@ -43,5 +47,36 @@ class ClassificationCNN(FitModuleCNN):
         x = self.dropout(x)
         output = self.final_linear(x)
         return output
+
+    def compute_saliency_map(self, sample_doc, class_label, file_path, id2token):
+        self.zero_grad()
+        self.eval()
+        sample_doc = Variable(sample_doc, requires_grad=False).type(self.embedding_tensor)
+        sample_doc = sample_doc.unsqueeze(0)
+        class_label = Variable(torch.LongTensor([class_label])).type(self.embedding_tensor)
+        loss_function = torch.nn.NLLLoss(size_average=False)
+        scores = self.forward(sample_doc)
+        loss = loss_function(scores, class_label)
+        #     print loss
+        loss.backward()
+        grad_of_param = {}
+        for name, parameter in self.named_parameters():
+            if 'embed' in name:
+                grad_of_param[name] = parameter.grad
+        grad_embed = grad_of_param['embed.weight']
+        sensitivity = torch.pow(grad_embed, 2).mean(dim=1)
+        sensitivity = list(sensitivity.data.cpu().numpy())
+        jd = [id2token[zz] for zz in list(sample_doc.data.cpu().numpy()[0])]
+        #     print list(sample_doc.data.cpu().numpy()[0])
+        activations = [sensitivity[yy] for yy in list(sample_doc.data.cpu().numpy()[0])]
+        df = pd.DataFrame({'word': jd, 'senstivity': activations})
+        #     df = df.sort_values('senstivity',ascending=True)
+        words = df.word.values
+        values = df.senstivity.values
+        with codecs.open(file_path, "w", encoding="utf-8") as html_file:
+            for word, alpha in zip(words, values / values.max()):
+                if not word == '_PAD':
+                    html_file.write('<font style="background: rgba(255, 255, 0, %f)">%s</font>\n' % (alpha, word))
+        return F.softmax(scores,dim=1).data.cpu().numpy(), df
 
 
