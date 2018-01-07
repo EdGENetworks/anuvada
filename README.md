@@ -12,7 +12,12 @@ Note: This model is a convolutional neural network trained on IMDB sentiment ana
 SGD till validation loss stopped increasing. Here is sensitivity analysis on the some sample inputs. You can have a look
 in the examples directory for training and visualising the outputs.
 
+#### Positive review
+
 ![alt text](positive.png "Positive Sample")
+
+#### Negative review
+
 ![alt text](negative.png "Negative Sample")
 
 ## Installing
